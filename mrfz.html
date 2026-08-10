@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼豆图纸生成器 - 24×24 像素风（锐化版）</title>
+    <style>
+        :root {
+            --bg: #f6f3ee;
+            --card-bg: #ffffff;
+            --text: #3a3335;
+            --text-secondary: #6b5f62;
+            --border: #e2dbd2;
+            --accent: #d4893f;
+            --accent-hover: #c07832;
+            --accent-light: #fdf5ec;
+            --danger: #c0392b;
+            --shadow: 0 2px 16px rgba(60, 40, 20, 0.06);
+            --shadow-lg: 0 8px 40px rgba(60, 40, 20, 0.10);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            background-image: radial-gradient(ellipse at 15% 15%, #fdf5ec 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 80%, #f3f0eb 0%, transparent 55%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .container {
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding-top: 8px;
+        }
+        .header {
+            text-align: center;
+            padding: 4px 0 2px;
+        }
+        .header .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        .header .logo .icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #fde4cf, #f5c89e);
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 2px 8px rgba(180, 120, 60, 0.16);
+        }
+        .header .subtitle {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            letter-spacing: 0.02em;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .upload-zone {
+            border: 2.5px dashed #d5cbbf;
+            border-radius: var(--radius-sm);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: #fafaf7;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--accent);
+            background: #fefaf5;
+            box-shadow: inset 0 0 0 5px rgba(212, 137, 63, 0.04);
+        }
+        .upload-zone.drag-over {
+            border-style: solid;
+            background: #fff9f2;
+            transform: scale(1.006);
+        }
+        .upload-zone .upload-icon {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+            display: block;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+        .upload-zone:hover .upload-icon {
+            opacity: 1;
+            transform: translateY(-4px);
+        }
+        .upload-zone .upload-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+        .upload-zone .upload-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border-radius: 24px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font);
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(212, 137, 63, 0.30);
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 5px 18px rgba(212, 137, 63, 0.38);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+        .btn-outline:hover {
+            border-color: #c0b0a0;
+            background: #fafaf6;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            border-radius: 20px;
+        }
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border: 1.5px solid #e0c8c8;
+        }
+        .btn-danger:hover {
+            background: #fef8f8;
+            border-color: #c9a0a0;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            justify-content: center;
+        }
+        .result-area {
+            display: none;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .result-area.active {
+            display: flex;
+        }
+        .result-layout {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .canvas-wrapper {
+            position: relative;
+            background: #fff;
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: inline-block;
+            line-height: 0;
+            flex-shrink: 0;
+        }
+        .canvas-wrapper .grid-label {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        canvas#pixelCanvas {
+            display: block;
+            border-radius: 3px;
+            cursor: crosshair;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        .info-panel {
+            flex: 1;
+            min-width: 260px;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .info-card {
+            background: #fff;
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .info-card h3 {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+        .palette-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+            table-layout: fixed;
+        }
+        .palette-table th {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.68rem;
+            color: #8c7e72;
+            padding: 6px 2px 4px;
+            letter-spacing: 0.02em;
+            border-bottom: 1px solid #e8e0d6;
+        }
+        .palette-table .row-label {
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.66rem;
+            color: #9a8c80;
+            padding: 5px 4px 5px 0;
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+            width: auto;
+        }
+        .palette-table td.color-cell {
+            text-align: center;
+            padding: 3px 2px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+            position: relative;
+        }
+        .palette-table td.color-cell:hover {
+            background: #faf6f0;
+            transform: scale(1.03);
+        }
+        .palette-table .swatch {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            border: 1.5px solid rgba(0, 0, 0, 0.10);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            vertical-align: middle;
+            transition: var(--transition);
+        }
+        .palette-table td.color-cell:hover .swatch {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+            transform: scale(1.08);
+        }
+        .palette-table .color-num {
+            font-weight: 700;
+            font-size: 0.66rem;
+            color: #555;
+            display: block;
+            line-height: 1;
+            margin-top: 1px;
+        }
+        .palette-table .color-count-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #fff;
+            background: #d4893f;
+            border-radius: 10px;
+            padding: 1px 6px;
+            display: inline-block;
+            min-width: 16px;
+            text-align: center;
+            line-height: 1.4;
+            margin-top: 1px;
+            transition: var(--transition);
+        }
+        .palette-table .color-count-badge.zero {
+            background: #d5cfc8;
+            color: #999;
+        }
+        .palette-table td.color-cell.dimmed {
+            opacity: 0.4;
+        }
+        .palette-table td.color-cell.highlight-cell {
+            background: #fef3e4 !important;
+            border-radius: 8px;
+            box-shadow: 0 0 0 3px rgba(212, 137, 63, 0.25);
+        }
+        .total-beads {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--text);
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            margin-top: 6px;
+            text-align: center;
+        }
+        .total-beads span {
+            color: var(--accent);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .palette-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #8c7e72;
+            letter-spacing: 0.03em;
+            margin: 8px 0 4px;
+            padding-bottom: 4px;
+            border-bottom: 1px dotted #e0d8cd;
+        }
+        .tooltip {
+            position: fixed;
+            pointer-events: none;
+            background: #3a3335;
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 100;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+        }
+        .tooltip.visible {
+            opacity: 1;
+        }
+        .toast-popup {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #3a3335;
+            color: #fff;
+            padding: 11px 22px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+            font-family: var(--font);
+        }
+
+        /* 裁剪界面 */
+        .crop-card {
+            display: none;
+        }
+        .crop-card.active {
+            display: block;
+        }
+        .crop-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .crop-canvas-wrapper {
+            position: relative;
+            display: inline-block;
+            line-height: 0;
+            cursor: default;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+            touch-action: none;
+        }
+        .crop-canvas-wrapper.grabbing {
+            cursor: grabbing;
+        }
+        .crop-canvas-wrapper.grab {
+            cursor: grab;
+        }
+        canvas#cropCanvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        .crop-hint {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+        .crop-hint strong {
+            color: var(--accent);
+        }
+        .crop-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .crop-controls label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        .crop-controls input[type="range"] {
+            -webkit-appearance: none;
+            flex: 1;
+            min-width: 120px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0d8cd;
+            outline: none;
+            cursor: pointer;
+        }
+        .crop-controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(180, 100, 40, 0.30);
+            border: 2px solid #fff;
+            transition: var(--transition);
+        }
+        .crop-controls input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 12px rgba(180, 100, 40, 0.40);
+        }
+        .crop-controls .size-indicator {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 44px;
+            text-align: center;
+            background: #fefaf5;
+            border-radius: 12px;
+            padding: 3px 8px;
+        }
+        .crop-btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 750px) {
+            .result-layout {
+                flex-direction: column;
+                align-items: center;
+                gap: 14px;
+            }
+            .info-panel {
+                max-width: 100%;
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .info-card {
+                padding: 12px 10px;
+            }
+            .card {
+                padding: 16px 12px;
+            }
+            .upload-zone {
+                padding: 26px 14px;
+            }
+            .header .logo {
+                font-size: 1.25rem;
+            }
+            canvas#pixelCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+            .palette-table {
+                font-size: 0.62rem;
+            }
+            .palette-table .swatch {
+                width: 16px;
+                height: 16px;
+                border-radius: 3px;
+            }
+            .palette-table .color-num {
+                font-size: 0.58rem;
+            }
+            .palette-table .color-count-badge {
+                font-size: 0.55rem;
+                padding: 0px 4px;
+            }
+            .crop-controls {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .crop-controls input[type="range"] {
+                width: 100%;
+            }
+        }
+        @media (max-width: 420px) {
+            .btn-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn {
+                justify-content: center;
+            }
+            .palette-table .row-label {
+                font-size: 0.56rem;
+            }
+            .palette-table th {
+                font-size: 0.58rem;
+            }
+            .palette-table .swatch {
+                width: 14px;
+                height: 14px;
+            }
+            .crop-btn-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="icon">🧩</span>
+                拼豆图纸生成器
+            </div>
+            <p class="subtitle">上传任意图片 → 自由裁剪 → 锐化转换为 24×24 像素拼豆图纸（44色）</p>
+        </div>
+
+        <div class="card" id="uploadCard">
+            <div class="upload-zone" id="uploadZone" title="点击上传或拖拽图片到此处">
+                <span class="upload-icon">🖼️</span>
+                <p class="upload-text">点击上传或拖拽图片</p>
+                <p class="upload-hint">支持 JPG / PNG / WebP / BMP · 也支持 Ctrl+V 粘贴</p>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+        </div>
+
+        <div class="card crop-card" id="cropCard">
+            <div class="crop-container">
+                <h3 style="text-align:center;font-size:0.9rem;color:var(--text);margin-bottom:4px;">
+                    ✂️ 拖动选择框，框选你想要转换的正方形区域
+                </h3>
+                <div class="crop-canvas-wrapper" id="cropCanvasWrapper">
+                    <canvas id="cropCanvas"></canvas>
+                </div>
+                <p class="crop-hint">
+                    <strong>🖱️ 拖动</strong>方框移动位置 · <strong>滑动下方滑块</strong>调整框的大小
+                </p>
+                <div class="crop-controls">
+                    <label for="cropSizeSlider">🔲 框大小：</label>
+                    <input type="range" id="cropSizeSlider" min="15" max="100" value="85" step="1">
+                    <span class="size-indicator" id="sizeIndicator">85%</span>
+                </div>
+                <div class="crop-btn-group">
+                    <button class="btn btn-primary" id="btnConfirmCrop">✅ 确认裁剪</button>
+                    <button class="btn btn-danger" id="btnCancelCrop">↩ 重新上传</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-area" id="resultArea">
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnDownload" title="下载高清拼豆图纸PNG，适合打印">📥 下载图纸</button>
+                <button class="btn btn-outline btn-sm" id="btnToggleNumbers" title="在网格中显示/隐藏颜色编号">🔢 编号显示</button>
+                <button class="btn btn-outline btn-sm" id="btnToggleGrid" title="显示/隐藏网格线">📐 网格线</button>
+                <button class="btn btn-outline btn-sm" id="btnReset" title="重新上传图片">🔄 重新上传</button>
+            </div>
+            <div class="result-layout">
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <div class="grid-label">📋 24 × 24 像素图纸</div>
+                    <canvas id="pixelCanvas"></canvas>
+                </div>
+                <div class="info-panel" id="infoPanel">
+                    <div class="info-card">
+                        <h3>🎨 调色板 · 颜色对照 & 所需数量</h3>
+                        <div class="palette-section-title">📋 第一张调色板（黑白·红·肤色·大地·暖黄）</div>
+                        <div id="palette1Container"></div>
+                        <div class="palette-section-title" style="margin-top:10px;">📋 第二张调色板（暖橙·橄榄·暗棕·蓝紫·灰蓝·青绿）</div>
+                        <div id="palette2Container"></div>
+                        <div class="total-beads" id="totalBeads"></div>
+                    </div>
+                    <div class="info-card" style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7;">
+                        <strong>💡 使用提示：</strong><br>
+                        • 悬停网格查看颜色详情<br>
+                        • 悬停/点击图例色块高亮对应格子<br>
+                        • 下载图纸适合A4打印<br>
+                        • 深色格子编号为白色文字<br>
+                        • 共 <strong>44种</strong> 专业拼豆颜色
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+    <canvas id="downloadCanvas" style="display:none;"></canvas>
+
+    <script>
+        (function() {
+            const BEAD_PALETTE = [
+                { name: '炭黑色', hex: '#262626', rgb: [38, 38, 38], palette: 1, row: 1, rowLabel: '黑白中性灰' },
+                { name: '中灰色', hex: '#B2B2B2', rgb: [178, 178, 178], palette: 1, row: 1, rowLabel: '黑白中性灰' },
+                { name: '米白浅灰', hex: '#E6E2DD', rgb: [230, 226, 221], palette: 1, row: 1, rowLabel: '黑白中性灰' },
+                { name: '纯白色', hex: '#FFFFFF', rgb: [255, 255, 255], palette: 1, row: 1, rowLabel: '黑白中性灰' },
+                { name: '砖红色', hex: '#D13A3A', rgb: [209, 58, 58], palette: 1, row: 2, rowLabel: '红色系' },
+                { name: '酒红/枣红', hex: '#9E1818', rgb: [158, 24, 24], palette: 1, row: 2, rowLabel: '红色系' },
+                { name: '玫红色', hex: '#D61F58', rgb: [214, 31, 88], palette: 1, row: 2, rowLabel: '红色系' },
+                { name: '裸粉豆沙', hex: '#E6A89A', rgb: [230, 168, 154], palette: 1, row: 2, rowLabel: '红色系' },
+                { name: '暖橘肤', hex: '#F7A078', rgb: [247, 160, 120], palette: 1, row: 3, rowLabel: '肤色系' },
+                { name: '浅粉白皮', hex: '#F6D2C0', rgb: [246, 210, 192], palette: 1, row: 3, rowLabel: '肤色系' },
+                { name: '白皙肤色', hex: '#F9E6DD', rgb: [249, 230, 221], palette: 1, row: 3, rowLabel: '肤色系' },
+                { name: '奶杏肤色', hex: '#FAF0DD', rgb: [250, 240, 221], palette: 1, row: 3, rowLabel: '肤色系' },
+                { name: '浅米褐', hex: '#D9CFC2', rgb: [217, 207, 194], palette: 1, row: 4, rowLabel: '浅棕大地色' },
+                { name: '卡其米色', hex: '#E2D1B4', rgb: [226, 209, 180], palette: 1, row: 4, rowLabel: '浅棕大地色' },
+                { name: '橘棕陶土色', hex: '#D36E28', rgb: [211, 110, 40], palette: 1, row: 4,
+                    rowLabel: '浅棕大地色' },
+                { name: '焦糖棕橙', hex: '#D4893F', rgb: [212, 137, 63], palette: 1, row: 4, rowLabel: '浅棕大地色' },
+                { name: '深橘橙', hex: '#F18A13', rgb: [241, 138, 19], palette: 1, row: 5, rowLabel: '暖橙黄延续' },
+                { name: '亮金黄', hex: '#F8C52E', rgb: [248, 197, 46], palette: 1, row: 5, rowLabel: '暖橙黄延续' },
+                { name: '浅奶黄', hex: '#F9E5B5', rgb: [249, 229, 181], palette: 1, row: 5, rowLabel: '暖橙黄延续' },
+                { name: '灰橄榄褐', hex: '#BCB792', rgb: [188, 183, 146], palette: 1, row: 5,
+                    rowLabel: '暖橙黄延续' },
+                { name: '橘橙色', hex: '#F28F16', rgb: [242, 143, 22], palette: 2, row: 1, rowLabel: '暖橙黄浅调' },
+                { name: '鹅黄色', hex: '#F9C83A', rgb: [249, 200, 58], palette: 2, row: 1, rowLabel: '暖橙黄浅调' },
+                { name: '米杏色', hex: '#F9E6B7', rgb: [249, 230, 183], palette: 2, row: 1, rowLabel: '暖橙黄浅调' },
+                { name: '灰橄榄浅褐', hex: '#BCB893', rgb: [188, 184, 147], palette: 2, row: 1,
+                    rowLabel: '暖橙黄浅调' },
+                { name: '浅酸柠绿', hex: '#C8DD88', rgb: [200, 221, 136], palette: 2, row: 2, rowLabel: '橄榄绿+浅棕' },
+                { name: '深橄榄绿', hex: '#707216', rgb: [112, 114, 22], palette: 2, row: 2, rowLabel: '橄榄绿+浅棕' },
+                { name: '土黄褐色', hex: '#B59463', rgb: [181, 148, 99], palette: 2, row: 2, rowLabel: '橄榄绿+浅棕' },
+                { name: '浅摩卡棕', hex: '#B0957E', rgb: [176, 149, 126], palette: 2, row: 2,
+                    rowLabel: '橄榄绿+浅棕' },
+                { name: '暗芥末黄褐', hex: '#A48C3D', rgb: [164, 140, 61], palette: 2, row: 3,
+                    rowLabel: '暗棕+深紫褐' },
+                { name: '深巧克力棕', hex: '#472E1C', rgb: [71, 46, 28], palette: 2, row: 3, rowLabel: '暗棕+深紫褐' },
+                { name: '红棕褐色', hex: '#86532C', rgb: [134, 83, 44], palette: 2, row: 3, rowLabel: '暗棕+深紫褐' },
+                { name: '灰紫褐', hex: '#635460', rgb: [99, 84, 96], palette: 2, row: 3, rowLabel: '暗棕+深紫褐' },
+                { name: '深藏青紫', hex: '#312745', rgb: [49, 39, 69], palette: 2, row: 4, rowLabel: '蓝紫色系' },
+                { name: '宝蓝色', hex: '#3A499C', rgb: [58, 73, 156], palette: 2, row: 4, rowLabel: '蓝紫色系' },
+                { name: '紫罗兰', hex: '#6947A8', rgb: [105, 71, 168], palette: 2, row: 4, rowLabel: '蓝紫色系' },
+                { name: '淡香芋紫', hex: '#C1A8DD', rgb: [193, 168, 221], palette: 2, row: 4, rowLabel: '蓝紫色系' },
+                { name: '灰薰衣草蓝', hex: '#B8B8D6', rgb: [184, 184, 214], palette: 2, row: 5,
+                    rowLabel: '浅灰蓝+湖蓝' },
+                { name: '中性冷灰', hex: '#A8ABB6', rgb: [168, 171, 182], palette: 2, row: 5, rowLabel: '浅灰蓝+湖蓝' },
+                { name: '松石蓝绿', hex: '#62A8B3', rgb: [98, 168, 179], palette: 2, row: 5, rowLabel: '浅灰蓝+湖蓝' },
+                { name: '浅灰天蓝', hex: '#B5D1DD', rgb: [181, 209, 221], palette: 2, row: 5,
+                    rowLabel: '浅灰蓝+湖蓝' },
+                { name: '薄荷浅天蓝', hex: '#94D6E8', rgb: [148, 214, 232], palette: 2, row: 6,
+                    rowLabel: '浅青+湖绿+藏青' },
+                { name: '蓝绿色/水鸭绿', hex: '#42A8A0', rgb: [66, 168, 160], palette: 2, row: 6,
+                    rowLabel: '浅青+湖绿+藏青' },
+                { name: '雾灰青', hex: '#B6D2CC', rgb: [182, 210, 204], palette: 2, row: 6, rowLabel: '浅青+湖绿+藏青' },
+                { name: '深海藏青', hex: '#283759', rgb: [40, 55, 89], palette: 2, row: 6, rowLabel: '浅青+湖绿+藏青' },
+            ];
+            const TOTAL_COLORS = BEAD_PALETTE.length;
+            const GRID_SIZE = 24;
+            const MAX_DISPLAY_DIM = 560;
+
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadCard = document.getElementById('uploadCard');
+            const cropCard = document.getElementById('cropCard');
+            const cropCanvas = document.getElementById('cropCanvas');
+            const cropCanvasWrapper = document.getElementById('cropCanvasWrapper');
+            const cropSizeSlider = document.getElementById('cropSizeSlider');
+            const sizeIndicator = document.getElementById('sizeIndicator');
+            const btnConfirmCrop = document.getElementById('btnConfirmCrop');
+            const btnCancelCrop = document.getElementById('btnCancelCrop');
+            const resultArea = document.getElementById('resultArea');
+            const pixelCanvas = document.getElementById('pixelCanvas');
+            const downloadCanvas = document.getElementById('downloadCanvas');
+            const tooltip = document.getElementById('tooltip');
+            const totalBeads = document.getElementById('totalBeads');
+            const palette1Container = document.getElementById('palette1Container');
+            const palette2Container = document.getElementById('palette2Container');
+            const btnDownload = document.getElementById('btnDownload');
+            const btnToggleNumbers = document.getElementById('btnToggleNumbers');
+            const btnToggleGrid = document.getElementById('btnToggleGrid');
+            const btnReset = document.getElementById('btnReset');
+
+            let pixelData = null;
+            let colorUsage = null;
+            let showNumbers = true;
+            let showGridLines = true;
+            let hoveredCell = null;
+            let highlightColorIndex = null;
+            let DISPLAY_CELL_SIZE = 22;
+            const DOWNLOAD_CELL_SIZE = 34;
+
+            let originalImage = null;
+            let cropDisplayScale = 1;
+            let cropDisplayW = 0;
+            let cropDisplayH = 0;
+            let cropBoxSize = 0;
+            let cropBoxX = 0;
+            let cropBoxY = 0;
+            let isDragging = false;
+            let dragStartMouseX = 0;
+            let dragStartMouseY = 0;
+            let dragStartBoxX = 0;
+            let dragStartBoxY = 0;
+
+            function updateDisplayCellSize() {
+                const maxWidth = Math.min(window.innerWidth - 50, 540);
+                DISPLAY_CELL_SIZE = Math.floor(maxWidth / GRID_SIZE);
+                DISPLAY_CELL_SIZE = Math.max(13, Math.min(DISPLAY_CELL_SIZE, 24));
+            }
+            updateDisplayCellSize();
+
+            function colorDistanceSquared(rgb1, rgb2) {
+                const rDiff = (rgb1[0] - rgb2[0]) * 0.299;
+                const gDiff = (rgb1[1] - rgb2[1]) * 0.587;
+                const bDiff = (rgb1[2] - rgb2[2]) * 0.114;
+                return rDiff * rDiff + gDiff * gDiff + bDiff * bDiff;
+            }
+
+            function findClosestBeadColor(rgb) {
+                let minDist = Infinity;
+                let bestIndex = 0;
+                for (let i = 0; i < BEAD_PALETTE.length; i++) {
+                    const dist = colorDistanceSquared(rgb, BEAD_PALETTE[i].rgb);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        bestIndex = i;
+                    }
+                }
+                return bestIndex;
+            }
+
+            function getLuminance(rgb) {
+                return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+            }
+
+            // --- 裁剪相关 ---
+            function openCropInterface(img) {
+                originalImage = img;
+                const origW = img.naturalWidth;
+                const origH = img.naturalHeight;
+                const shortSide = Math.min(origW, origH);
+                cropDisplayScale = shortSide <= MAX_DISPLAY_DIM ? 1 : MAX_DISPLAY_DIM / shortSide;
+                cropDisplayW = Math.round(origW * cropDisplayScale);
+                cropDisplayH = Math.round(origH * cropDisplayScale);
+                const initialPercent = parseInt(cropSizeSlider.value) || 85;
+                cropBoxSize = Math.round(Math.min(cropDisplayW, cropDisplayH) * initialPercent / 100);
+                cropBoxX = Math.round((cropDisplayW - cropBoxSize) / 2);
+                cropBoxY = Math.round((cropDisplayH - cropBoxSize) / 2);
+                clampBoxPosition();
+                cropCanvas.width = cropDisplayW;
+                cropCanvas.height = cropDisplayH;
+                cropCanvas.style.width = cropDisplayW + 'px';
+                cropCanvas.style.height = cropDisplayH + 'px';
+                uploadCard.style.display = 'none';
+                resultArea.classList.remove('active');
+                cropCard.classList.add('active');
+                cropSizeSlider.value = initialPercent;
+                sizeIndicator.textContent = initialPercent + '%';
+                renderCropCanvas();
+                cropCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function clampBoxPosition() {
+                const maxX = cropDisplayW - cropBoxSize;
+                const maxY = cropDisplayH - cropBoxSize;
+                if (cropBoxX < 0) cropBoxX = 0;
+                if (cropBoxY < 0) cropBoxY = 0;
+                if (cropBoxX > maxX) cropBoxX = maxX;
+                if (cropBoxY > maxY) cropBoxY = maxY;
+            }
+
+            function renderCropCanvas() {
+                if (!originalImage) return;
+                const ctx = cropCanvas.getContext('2d');
+                ctx.clearRect(0, 0, cropDisplayW, cropDisplayH);
+                ctx.drawImage(originalImage, 0, 0, cropDisplayW, cropDisplayH);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+                ctx.fillRect(0, 0, cropDisplayW, cropBoxY);
+                ctx.fillRect(0, cropBoxY + cropBoxSize, cropDisplayW, cropDisplayH - cropBoxY - cropBoxSize);
+                ctx.fillRect(0, cropBoxY, cropBoxX, cropBoxSize);
+                ctx.fillRect(cropBoxX + cropBoxSize, cropBoxY, cropDisplayW - cropBoxX - cropBoxSize, cropBoxSize);
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(cropBoxX, cropBoxY, cropBoxSize, cropBoxSize);
+                ctx.strokeStyle = 'rgba(212, 137, 63, 0.7)';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(cropBoxX - 1, cropBoxY - 1, cropBoxSize + 2, cropBoxSize + 2);
+                ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(cropBoxX + 1.5, cropBoxY + 1.5, cropBoxSize - 3, cropBoxSize - 3);
+                const cornerLen = Math.min(16, cropBoxSize * 0.15);
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 3;
+                const corners = [
+                    { x: cropBoxX, y: cropBoxY, dx: 1, dy: 1 },
+                    { x: cropBoxX + cropBoxSize, y: cropBoxY, dx: -1, dy: 1 },
+                    { x: cropBoxX, y: cropBoxY + cropBoxSize, dx: 1, dy: -1 },
+                    { x: cropBoxX + cropBoxSize, y: cropBoxY + cropBoxSize, dx: -1, dy: -1 },
+                ];
+                corners.forEach(c => {
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, c.y + c.dy * cornerLen);
+                    ctx.lineTo(c.x, c.y);
+                    ctx.lineTo(c.x + c.dx * cornerLen, c.y);
+                    ctx.stroke();
+                });
+                const origBoxSize = Math.round(cropBoxSize / cropDisplayScale);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 12px "PingFang SC","Microsoft YaHei",sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${origBoxSize}×${origBoxSize} px`, cropBoxX + cropBoxSize / 2,
+                    cropBoxY - 10 > 18 ? cropBoxY - 8 : cropBoxY + cropBoxSize + 20);
+            }
+
+            function getEventPos(e) {
+                const rect = cropCanvas.getBoundingClientRect();
+                const scaleX = cropDisplayW / rect.width;
+                const scaleY = cropDisplayH / rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+            }
+
+            function isInsideBox(pos) {
+                return pos.x >= cropBoxX && pos.x <= cropBoxX + cropBoxSize &&
+                    pos.y >= cropBoxY && pos.y <= cropBoxY + cropBoxSize;
+            }
+
+            function updateCursor(pos) {
+                if (isInsideBox(pos)) {
+                    cropCanvasWrapper.classList.add('grab');
+                    cropCanvasWrapper.classList.remove('grabbing');
+                } else {
+                    cropCanvasWrapper.classList.remove('grab', 'grabbing');
+                }
+            }
+
+            cropCanvas.addEventListener('mousedown', (e) => {
+                const pos = getEventPos(e);
+                if (isInsideBox(pos)) {
+                    isDragging = true;
+                    dragStartMouseX = pos.x;
+                    dragStartMouseY = pos.y;
+                    dragStartBoxX = cropBoxX;
+                    dragStartBoxY = cropBoxY;
+                    cropCanvasWrapper.classList.add('grabbing');
+                    cropCanvasWrapper.classList.remove('grab');
+                    e.preventDefault();
+                }
+            });
+            window.addEventListener('mousemove', (e) => {
+                const pos = getEventPos(e);
+                if (isDragging) {
+                    const dx = pos.x - dragStartMouseX;
+                    const dy = pos.y - dragStartMouseY;
+                    cropBoxX = dragStartBoxX + dx;
+                    cropBoxY = dragStartBoxY + dy;
+                    clampBoxPosition();
+                    renderCropCanvas();
+                } else if (cropCard.classList.contains('active')) {
+                    updateCursor(pos);
+                }
+            });
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    cropCanvasWrapper.classList.remove('grabbing');
+                }
+            });
+            cropCanvas.addEventListener('touchstart', (e) => {
+                const pos = getEventPos(e);
+                if (isInsideBox(pos)) {
+                    isDragging = true;
+                    dragStartMouseX = pos.x;
+                    dragStartMouseY = pos.y;
+                    dragStartBoxX = cropBoxX;
+                    dragStartBoxY = cropBoxY;
+                    cropCanvasWrapper.classList.add('grabbing');
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            window.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    const pos = getEventPos(e);
+                    const dx = pos.x - dragStartMouseX;
+                    const dy = pos.y - dragStartMouseY;
+                    cropBoxX = dragStartBoxX + dx;
+                    cropBoxY = dragStartBoxY + dy;
+                    clampBoxPosition();
+                    renderCropCanvas();
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            window.addEventListener('touchend', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    cropCanvasWrapper.classList.remove('grabbing');
+                }
+            });
+            cropSizeSlider.addEventListener('input', () => {
+                const percent = parseInt(cropSizeSlider.value);
+                sizeIndicator.textContent = percent + '%';
+                const shortDisplay = Math.min(cropDisplayW, cropDisplayH);
+                const newSize = Math.round(shortDisplay * percent / 100);
+                const centerX = cropBoxX + cropBoxSize / 2;
+                const centerY = cropBoxY + cropBoxSize / 2;
+                cropBoxSize = newSize;
+                cropBoxX = Math.round(centerX - cropBoxSize / 2);
+                cropBoxY = Math.round(centerY - cropBoxSize / 2);
+                clampBoxPosition();
+                renderCropCanvas();
+            });
+
+            // --- 核心转换（添加锐化滤镜）---
+            function applySharpenAndReduce(image, sx, sy, sw, sh) {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = GRID_SIZE;
+                offCanvas.height = GRID_SIZE;
+                const offCtx = offCanvas.getContext('2d');
+                // 关键优化：增加对比度和饱和度，减少模糊杂色
+                offCtx.filter = 'contrast(1.35) saturate(1.2)';
+                offCtx.imageSmoothingEnabled = true;
+                offCtx.imageSmoothingQuality = 'high';
+                offCtx.drawImage(image, sx, sy, sw, sh, 0, 0, GRID_SIZE, GRID_SIZE);
+                return offCtx.getImageData(0, 0, GRID_SIZE, GRID_SIZE);
+            }
+
+            function processCroppedRegion() {
+                if (!originalImage) return;
+                const origBoxSize = cropBoxSize / cropDisplayScale;
+                const origBoxX = cropBoxX / cropDisplayScale;
+                const origBoxY = cropBoxY / cropDisplayScale;
+                const imageData = applySharpenAndReduce(originalImage, origBoxX, origBoxY, origBoxSize, origBoxSize);
+                const pixels = imageData.data;
+                pixelData = new Uint8Array(GRID_SIZE * GRID_SIZE);
+                colorUsage = new Map();
+                for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                    const r = pixels[i * 4];
+                    const g = pixels[i * 4 + 1];
+                    const b = pixels[i * 4 + 2];
+                    const beadIndex = findClosestBeadColor([r, g, b]);
+                    pixelData[i] = beadIndex;
+                    colorUsage.set(beadIndex, (colorUsage.get(beadIndex) || 0) + 1);
+                }
+                cropCard.classList.remove('active');
+                resultArea.classList.add('active');
+                uploadCard.style.display = 'none';
+                renderDisplayCanvas();
+                renderPaletteLegend();
+                updateTotalBeads();
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('✅ 裁剪完成！已生成24×24拼豆图纸（锐化处理）');
+            }
+
+            function processImageAuto(img) {
+                const minDim = Math.min(img.naturalWidth, img.naturalHeight);
+                const sx = Math.floor((img.naturalWidth - minDim) / 2);
+                const sy = Math.floor((img.naturalHeight - minDim) / 2);
+                const imageData = applySharpenAndReduce(img, sx, sy, minDim, minDim);
+                const pixels = imageData.data;
+                pixelData = new Uint8Array(GRID_SIZE * GRID_SIZE);
+                colorUsage = new Map();
+                for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                    const r = pixels[i * 4];
+                    const g = pixels[i * 4 + 1];
+                    const b = pixels[i * 4 + 2];
+                    const beadIndex = findClosestBeadColor([r, g, b]);
+                    pixelData[i] = beadIndex;
+                    colorUsage.set(beadIndex, (colorUsage.get(beadIndex) || 0) + 1);
+                }
+                renderDisplayCanvas();
+                renderPaletteLegend();
+                updateTotalBeads();
+                resultArea.classList.add('active');
+                uploadCard.style.display = 'none';
+                cropCard.classList.remove('active');
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            btnConfirmCrop.addEventListener('click', processCroppedRegion);
+            btnCancelCrop.addEventListener('click', () => {
+                cropCard.classList.remove('active');
+                uploadCard.style.display = '';
+                resultArea.classList.remove('active');
+                originalImage = null;
+                pixelData = null;
+                colorUsage = null;
+                fileInput.value = '';
+                uploadCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            function handleFile(file, skipCrop = false) {
+                if (!file || !file.type.startsWith('image/')) {
+                    showToast('⚠️ 请上传图片文件');
+                    return;
+                }
+                if (file.size > 20 * 1024 * 1024) {
+                    showToast('⚠️ 图片大小不能超过20MB');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        if (skipCrop) {
+                            processImageAuto(img);
+                        } else {
+                            openCropInterface(img);
+                        }
+                    };
+                    img.onerror = function() {
+                        showToast('⚠️ 图片加载失败，请尝试其他图片');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                    fileInput.value = '';
+                }
+            });
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('drag-over');
+            });
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('drag-over');
+            });
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+            });
+            document.addEventListener('paste', (e) => {
+                if (resultArea.classList.contains('active') || cropCard.classList.contains('active')) return;
+                const items = e.clipboardData?.items;
+                if (items) {
+                    for (const item of items) {
+                        if (item.type.startsWith('image/')) {
+                            handleFile(item.getAsFile());
+                            break;
+                        }
+                    }
+                }
+            });
+
+            // --- 结果展示 ---
+            function renderDisplayCanvas() {
+                if (!pixelData) return;
+                updateDisplayCellSize();
+                const cellSize = DISPLAY_CELL_SIZE;
+                const totalSize = cellSize * GRID_SIZE;
+                const dpr = window.devicePixelRatio || 1;
+                pixelCanvas.width = totalSize * dpr;
+                pixelCanvas.height = totalSize * dpr;
+                pixelCanvas.style.width = totalSize + 'px';
+                pixelCanvas.style.height = totalSize + 'px';
+                const ctx = pixelCanvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+                ctx.clearRect(0, 0, totalSize, totalSize);
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const idx = row * GRID_SIZE + col;
+                        const beadIndex = pixelData[idx];
+                        const color = BEAD_PALETTE[beadIndex].hex;
+                        const x = col * cellSize;
+                        const y = row * cellSize;
+                        let alpha = 1;
+                        if (highlightColorIndex !== null && highlightColorIndex !== beadIndex) {
+                            alpha = 0.4;
+                        }
+                        ctx.globalAlpha = alpha;
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                        ctx.globalAlpha = 1;
+                        if (showGridLines) {
+                            ctx.strokeStyle = 'rgba(0,0,0,0.10)';
+                            ctx.lineWidth = 0.4;
+                            ctx.strokeRect(x + 0.2, y + 0.2, cellSize - 0.4, cellSize - 0.4);
+                        }
+                        if (showNumbers && cellSize >= 14 && alpha > 0.5) {
+                            const lum = getLuminance(BEAD_PALETTE[beadIndex].rgb);
+                            ctx.fillStyle = lum > 135 ? 'rgba(0,0,0,0.68)' : 'rgba(255,255,255,0.85)';
+                            const fontSize = Math.max(6.5, cellSize * 0.4);
+                            ctx.font = `bold ${fontSize}px "SF Mono","Cascadia Code","Consolas","PingFang SC","Microsoft YaHei",monospace`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(String(beadIndex + 1), x + cellSize / 2, y + cellSize / 2);
+                        }
+                        if (hoveredCell && hoveredCell.row === row && hoveredCell.col === col) {
+                            ctx.fillStyle = 'rgba(255,255,255,0.30)';
+                            ctx.fillRect(x, y, cellSize, cellSize);
+                            ctx.strokeStyle = 'rgba(0,0,0,0.50)';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+                        }
+                    }
+                }
+            }
+
+            function renderPaletteLegend() {
+                if (!colorUsage) return;
+                renderPaletteTable(1, palette1Container);
+                renderPaletteTable(2, palette2Container);
+            }
+
+            function renderPaletteTable(paletteNum, container) {
+                const colorsInPalette = BEAD_PALETTE.filter(c => c.palette === paletteNum);
+                const rows = {};
+                colorsInPalette.forEach(c => {
+                    if (!rows[c.row]) rows[c.row] = [];
+                    rows[c.row].push(c);
+                });
+                const rowKeys = Object.keys(rows).sort((a, b) => Number(a) - Number(b));
+                let html = '<table class="palette-table"><thead><tr><th style="width:auto;">分类</th>';
+                for (let i = 0; i < 4; i++) html += `<th>色${i + 1}</th>`;
+                html += '</tr></thead><tbody>';
+                rowKeys.forEach(rk => {
+                    const rowColors = rows[rk];
+                    const rowLabel = rowColors[0].rowLabel;
+                    html += '<tr>';
+                    html += `<td class="row-label" title="${rowLabel}">${rowLabel.length > 6 ? rowLabel.slice(0,6)+'…' : rowLabel}</td>`;
+                    for (let i = 0; i < 4; i++) {
+                        if (i < rowColors.length) {
+                            const c = rowColors[i];
+                            const globalIndex = BEAD_PALETTE.indexOf(c);
+                            const count = colorUsage.get(globalIndex) || 0;
+                            const dimmedClass = count === 0 ? ' dimmed' : '';
+                            html += `
+                                <td class="color-cell${dimmedClass}" data-bead-index="${globalIndex}"
+                                    title="#${globalIndex+1} ${c.name} · ${c.hex} · ${count}颗">
+                                    <span class="swatch" style="background:${c.hex};"></span>
+                                    <span class="color-num">#${globalIndex + 1}</span>
+                                    <span class="color-count-badge${count === 0 ? ' zero' : ''}">${count}</span>
+                                </td>`;
+                        } else {
+                            html += '<td></td>';
+                        }
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                container.querySelectorAll('.color-cell[data-bead-index]').forEach(cell => {
+                    const beadIndex = parseInt(cell.getAttribute('data-bead-index'));
+                    cell.addEventListener('mouseenter', () => {
+                        highlightColorIndex = beadIndex;
+                        document.querySelectorAll('.color-cell[data-bead-index]').forEach(c => c.classList.remove('highlight-cell'));
+                        document.querySelectorAll(`.color-cell[data-bead-index="${beadIndex}"]`).forEach(c => c.classList.add('highlight-cell'));
+                        renderDisplayCanvas();
+                    });
+                    cell.addEventListener('mouseleave', () => {
+                        highlightColorIndex = null;
+                        document.querySelectorAll('.color-cell').forEach(c => c.classList.remove('highlight-cell'));
+                        renderDisplayCanvas();
+                    });
+                    cell.addEventListener('click', () => {
+                        if (highlightColorIndex === beadIndex) {
+                            highlightColorIndex = null;
+                            document.querySelectorAll('.color-cell').forEach(c => c.classList.remove('highlight-cell'));
+                        } else {
+                            highlightColorIndex = beadIndex;
+                            document.querySelectorAll('.color-cell').forEach(c => c.classList.remove('highlight-cell'));
+                            document.querySelectorAll(`.color-cell[data-bead-index="${beadIndex}"]`).forEach(c => c.classList.add('highlight-cell'));
+                        }
+                        renderDisplayCanvas();
+                    });
+                });
+            }
+
+            function updateTotalBeads() {
+                if (!colorUsage) return;
+                let totalCount = 0;
+                colorUsage.forEach(count => { totalCount += count; });
+                totalBeads.innerHTML = `📦 总计需要 <span>${totalCount}</span> 颗拼豆（${colorUsage.size} 种颜色被使用 / 共${TOTAL_COLORS}色可选）`;
+            }
+
+            function downloadBlueprint() {
+                if (!pixelData) return;
+                const cellSize = DOWNLOAD_CELL_SIZE;
+                const gridPixelSize = cellSize * GRID_SIZE;
+                const padding = 36;
+                const titleHeight = 48;
+                const legendAreaHeight = 380;
+                const totalWidth = gridPixelSize + padding * 2;
+                const totalHeight = padding + titleHeight + gridPixelSize + 24 + legendAreaHeight + padding;
+                downloadCanvas.width = totalWidth * 2;
+                downloadCanvas.height = totalHeight * 2;
+                const ctx = downloadCanvas.getContext('2d');
+                ctx.scale(2, 2);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, totalWidth, totalHeight);
+                ctx.fillStyle = '#3a3335';
+                ctx.font = 'bold 19px "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('拼豆图纸 — 24×24 像素 · 44色调色板', totalWidth / 2, padding + 28);
+                const gridX = padding;
+                const gridY = padding + titleHeight;
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const idx = row * GRID_SIZE + col;
+                        const beadIndex = pixelData[idx];
+                        const color = BEAD_PALETTE[beadIndex].hex;
+                        const x = gridX + col * cellSize;
+                        const y = gridY + row * cellSize;
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                        ctx.strokeStyle = 'rgba(0,0,0,0.16)';
+                        ctx.lineWidth = 0.8;
+                        ctx.strokeRect(x + 0.4, y + 0.4, cellSize - 0.8, cellSize - 0.8);
+                        const lum = getLuminance(BEAD_PALETTE[beadIndex].rgb);
+                        ctx.fillStyle = lum > 135 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.82)';
+                        ctx.font = 'bold 11px "SF Mono","Cascadia Code","Consolas",monospace';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(String(beadIndex + 1), x + cellSize / 2, y + cellSize / 2);
+                    }
+                }
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(gridX - 2, gridY - 2, gridPixelSize + 4, gridPixelSize + 4);
+                const legendY = gridY + gridPixelSize + 20;
+                ctx.fillStyle = '#3a3335';
+                ctx.font = 'bold 13px "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('颜色对照表（44色调色板）：', gridX, legendY);
+                const sortedByIndex = [...colorUsage.entries()].sort((a, b) => a[0] - b[0]);
+                const itemsPerRow = 8;
+                const itemW = gridPixelSize / itemsPerRow;
+                sortedByIndex.forEach(([beadIndex, count], i) => {
+                    const r = Math.floor(i / itemsPerRow);
+                    const c = i % itemsPerRow;
+                    const lx = gridX + c * itemW;
+                    const ly = legendY + 16 + r * 38;
+                    const sw = 20;
+                    ctx.fillStyle = BEAD_PALETTE[beadIndex].hex;
+                    ctx.fillRect(lx, ly, sw, sw);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+                    ctx.lineWidth = 0.8;
+                    ctx.strokeRect(lx + 0.4, ly + 0.4, sw - 0.8, sw - 0.8);
+                    ctx.fillStyle = '#3a3335';
+                    ctx.font = '9px "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`#${beadIndex+1}×${count}`, lx + sw + 4, ly + sw / 2 + 3);
+                });
+                const link = document.createElement('a');
+                link.download = '拼豆图纸_24x24_44色.png';
+                link.href = downloadCanvas.toDataURL('image/png');
+                link.click();
+                showToast('✅ 图纸已下载！适合A4纸打印');
+            }
+
+            function showToast(msg) {
+                let toast = document.querySelector('.toast-popup');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.className = 'toast-popup';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = msg;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+                clearTimeout(toast._timeout);
+                toast._timeout = setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(-50%) translateY(10px)';
+                }, 2200);
+            }
+
+            pixelCanvas.addEventListener('mousemove', (e) => {
+                const rect = pixelCanvas.getBoundingClientRect();
+                const scaleX = DISPLAY_CELL_SIZE * GRID_SIZE / rect.width;
+                const scaleY = DISPLAY_CELL_SIZE * GRID_SIZE / rect.height;
+                const mx = (e.clientX - rect.left) * scaleX;
+                const my = (e.clientY - rect.top) * scaleY;
+                const col = Math.floor(mx / DISPLAY_CELL_SIZE);
+                const row = Math.floor(my / DISPLAY_CELL_SIZE);
+                if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+                    if (!hoveredCell || hoveredCell.row !== row || hoveredCell.col !== col) {
+                        hoveredCell = { row, col };
+                        const beadIndex = pixelData[row * GRID_SIZE + col];
+                        const color = BEAD_PALETTE[beadIndex];
+                        tooltip.textContent = `#${beadIndex + 1} ${color.name} | ${color.hex} | 第${row + 1}行 第${col + 1}列`;
+                        tooltip.classList.add('visible');
+                        tooltip.style.left = (e.clientX + 16) + 'px';
+                        tooltip.style.top = (e.clientY - 40) + 'px';
+                        renderDisplayCanvas();
+                    } else {
+                        tooltip.style.left = (e.clientX + 16) + 'px';
+                        tooltip.style.top = (e.clientY - 40) + 'px';
+                    }
+                } else {
+                    if (hoveredCell !== null) {
+                        hoveredCell = null;
+                        tooltip.classList.remove('visible');
+                        renderDisplayCanvas();
+                    }
+                }
+            });
+            pixelCanvas.addEventListener('mouseleave', () => {
+                hoveredCell = null;
+                tooltip.classList.remove('visible');
+                renderDisplayCanvas();
+            });
+
+            btnDownload.addEventListener('click', downloadBlueprint);
+            btnToggleNumbers.addEventListener('click', () => {
+                showNumbers = !showNumbers;
+                btnToggleNumbers.textContent = showNumbers ? '🔢 编号显示: 开' : '🔢 编号显示: 关';
+                btnToggleNumbers.style.background = showNumbers ? '' : '#f0ece8';
+                renderDisplayCanvas();
+            });
+            btnToggleGrid.addEventListener('click', () => {
+                showGridLines = !showGridLines;
+                btnToggleGrid.textContent = showGridLines ? '📐 网格线: 开' : '📐 网格线: 关';
+                btnToggleGrid.style.background = showGridLines ? '' : '#f0ece8';
+                renderDisplayCanvas();
+            });
+            btnReset.addEventListener('click', () => {
+                pixelData = null;
+                colorUsage = null;
+                hoveredCell = null;
+                highlightColorIndex = null;
+                originalImage = null;
+                resultArea.classList.remove('active');
+                cropCard.classList.remove('active');
+                uploadCard.style.display = '';
+                uploadCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                fileInput.value = '';
+                palette1Container.innerHTML = '';
+                palette2Container.innerHTML = '';
+                totalBeads.innerHTML = '';
+            });
+
+            let resizeDebounce;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeDebounce);
+                resizeDebounce = setTimeout(() => {
+                    if (pixelData) {
+                        updateDisplayCellSize();
+                        renderDisplayCanvas();
+                    }
+                }, 250);
+            });
+
+            function loadDemoImage() {
+                const demoCanvas = document.createElement('canvas');
+                demoCanvas.width = 240;
+                demoCanvas.height = 240;
+                const dctx = demoCanvas.getContext('2d');
+                const gradient = dctx.createRadialGradient(100, 90, 15, 120, 120, 160);
+                gradient.addColorStop(0, '#F8C52E');
+                gradient.addColorStop(0.25, '#F18A13');
+                gradient.addColorStop(0.5, '#D13A3A');
+                gradient.addColorStop(0.72, '#6947A8');
+                gradient.addColorStop(0.9, '#3A499C');
+                gradient.addColorStop(1, '#312745');
+                dctx.fillStyle = gradient;
+                dctx.fillRect(0, 0, 240, 240);
+                dctx.fillStyle = '#FFFFFF';
+                dctx.beginPath();
+                dctx.arc(170, 65, 30, 0, Math.PI * 2);
+                dctx.fill();
+                dctx.beginPath();
+                dctx.arc(55, 175, 22, 0, Math.PI * 2);
+                dctx.fill();
+                dctx.fillStyle = '#C8DD88';
+                dctx.beginPath();
+                dctx.arc(180, 170, 20, 0, Math.PI * 2);
+                dctx.fill();
+                const demoImg = new Image();
+                demoImg.onload = function() { processImageAuto(demoImg); };
+                demoImg.src = demoCanvas.toDataURL('image/png');
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    if (!pixelData) loadDemoImage();
+                }, 350);
+            });
+
+            console.log('🧩 拼豆图纸生成器（锐化版）已就绪！');
+            console.log('  - 自由裁剪 + 对比度增强');
+            console.log('  - 边界清晰、杂色少');
+        })();
+    </script>
+</body>
+</html>
